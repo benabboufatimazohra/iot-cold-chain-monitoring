@@ -16,7 +16,7 @@ Manual temperature logs are discontinuous, error-prone and give no alert at nigh
 - **Automatic incidents**: when T < 2 °C or T > 8 °C an incident is opened, its out-of-range counter and peak temperature are tracked, and it closes on the first in-range reading
 - **Live dashboard**: polls `GET /latest/` every 5 s and shows temperature, humidity and the age of the last reading
 - **Operator escalation (3 levels)** in the dashboard, based on the incident counter
-- **Email alerts** via SMTP
+- **Email alerts** via SMTP: one email when an incident opens (high or low temperature), not one per reading
 - **History charts** for temperature and humidity (Chart.js)
 - **Incident archive and detail pages** for traceability
 
@@ -58,6 +58,14 @@ python manage.py runserver 0.0.0.0:8000
 ```
 
 Email alerts need the environment variables listed in [`.env.example`](.env.example) (Gmail address, Gmail app password, recipients). Without them the app runs normally and simply sends no email.
+
+## Tests
+
+```bash
+python manage.py test DHT
+```
+
+The tests cover the incident logic and email alerts: in-range readings, high and low excursions, automatic closing, one email per incident, and no email when no recipient is configured.
 
 ## Next steps
 

@@ -11,6 +11,28 @@ import rest_framework
 
 MIN_OK = 2
 MAX_OK = 8
+
+
+def send_temperature_alert(temp, when):
+    """E-mail the operators when a reading leaves the safe 2-8 °C range."""
+    if not settings.ALERT_EMAIL_RECIPIENTS:
+        return
+    kind = "basse" if temp < MIN_OK else "haute"
+    try:
+        send_mail(
+            subject=f"⚠️ Alerte température {kind} : {temp:.1f} °C",
+            message=(
+                f"La température a atteint {temp:.1f} °C à {when}, "
+                f"hors de la plage autorisée ({MIN_OK}-{MAX_OK} °C). Un incident a été ouvert."
+            ),
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=settings.ALERT_EMAIL_RECIPIENTS,
+            fail_silently=True,
+        )
+    except Exception:
+        pass
+
+
 @api_view(['GET'])
 def Dlist(request):
     all_data = Dht11.objects.all()
@@ -23,20 +45,6 @@ class Dhtviews(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        temp = instance.temp
-
-        if temp < 25:
-            # 1) Email
-            try:
-                send_mail(
-                    subject="⚠️ Alerte Température basse",
-                    message=f"La température a atteint {temp:.1f} °C à {instance.dt}.",
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=settings.ALERT_EMAIL_RECIPIENTS,
-                    fail_silently=True,
-                )
-            except Exception:
-                pass
 
         # Incident management logic
         t = instance.temp
@@ -49,9 +57,10 @@ class Dhtviews(generics.CreateAPIView):
         incident = Incident.objects.filter(is_open=True).order_by("-start_at").first()
 
         if is_incident:
-            # si pas d'incident ouvert -> en créer un
+            # si pas d'incident ouvert -> en créer un et alerter par e-mail (une seule fois par incident)
             if incident is None:
                 incident = Incident.objects.create(is_open=True, counter=0, max_temp=t)
+                send_temperature_alert(t, instance.dt)
 
             incident.counter += 1
             if t > incident.max_temp:
