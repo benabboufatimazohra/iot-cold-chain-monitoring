@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Historique des Incidents</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .incident-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .incident-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .incident-info {
+            flex: 1;
+        }
+        .incident-info h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .incident-detail {
+            color: #666;
+            margin: 5px 0;
+        }
+        .incident-link {
+            background: #4da3ff;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .incident-link:hover {
+            background: #3a8ae0;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4da3ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .no-incidents {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .status {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+        }
+        .status.open {
+            background-color: red;
+        }
+        .status.closed {
+            background-color: green;
+        }
+        .highlight {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'dashboard' %}" class="back-link">&larr; Retour au Dashboard</a>
+    <h1>Historique des Incidents</h1>
+
+    <div class="incident-list">
+        {% for incident in incidents %}
+            <div class="incident-item">
+                <div class="incident-info">
+                    <h3>Incident #{{ incident.id }}</h3>
+                    <div class="incident-detail">
+                        <strong>Statut :</strong> <span class="status {% if incident.is_open %}open{% else %}closed{% endif %}">{% if incident.is_open %}En cours{% else %}Fermé{% endif %}</span>
+                    </div>
+                    <div class="incident-detail">
+                        <strong>Début :</strong> {{ incident.start_at|date:"d/m/Y H:i:s" }}
+                    </div>
+                    <div class="incident-detail">
+                        <strong>Fin :</strong> {% if incident.end_at %}{{ incident.end_at|date:"d/m/Y H:i:s" }}{% else %}-{% endif %}
+                    </div>
+                    <div class="incident-detail">
+                        <strong>Compteur :</strong> {{ incident.counter }}
+                    </div>
+                    <div class="incident-detail">
+                        <strong>Température max :</strong> {{ incident.max_temp }} °C
+                    </div>
+                </div>
+                <a href="{% url 'incident_detail' incident.id %}" class="incident-link">Voir Détails</a>
+            </div>
+        {% empty %}
+            <p class="no-incidents">Aucun incident archivé.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

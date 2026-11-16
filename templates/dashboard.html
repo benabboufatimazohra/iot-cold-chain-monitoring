@@ -1,0 +1,234 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Température & Humidité</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fa;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .card {
+      width: 260px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+      background: #4da3ff;
+      color: white;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    .card-value {
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    .card-time {
+      color: gray;
+      margin: 10px 0;
+    }
+
+    .btn {
+      margin-top: 15px;
+      padding: 8px 15px;
+      background: #4da3ff;
+      color: white;
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .incident-box {
+      width: 580px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 18px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: white;
+    }
+
+    .ok { background: #2ecc71; }
+    .alert { background: #e74c3c; }
+
+    .ops {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .op-card {
+      background: #f7fbff;
+      border: 1px solid #dbe9ff;
+      border-radius: 8px;
+      padding: 10px;
+      flex: 1;
+    }
+
+    .ack-btn {
+      background: #ffc107;
+      color: black;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+      margin-right: 5px;
+    }
+
+    .validation-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    .comment-section {
+      margin-top: 10px;
+    }
+
+    .comment-section textarea {
+      width: 100%;
+      height: 60px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 5px;
+      resize: vertical;
+    }
+
+    .chat-messages {
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 5px;
+      background: #fafafa;
+    }
+
+    .chat-message {
+      margin-bottom: 5px;
+      padding: 5px;
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid #4da3ff;
+    }
+
+    .chat-timestamp {
+      font-size: 12px;
+      color: gray;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: none;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+
+<body>
+
+<div id="notification" class="notification"></div>
+
+<h1>Dashboard Température & Humidité</h1>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-title">Température</div>
+    <div class="card-value" id="temp">-- °C</div>
+    <div class="card-time" id="temp-time">--</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Humidité</div>
+    <div class="card-value" id="hum">-- %</div>
+    <div class="card-time" id="hum-time">--</div>
+  </div>
+</div>
+
+<div class="incident-box">
+  <b>Incidents (2–8 °C)</b>
+  <span id="incident-badge" class="badge ok">OK</span>
+
+  <p>Statut : <b id="incident-status">Pas d'incident</b></p>
+  <p>Compteur : <b id="incident-counter">0</b></p>
+
+  <div class="ops">
+    <div id="op1" class="op-card hidden">
+      Opérateur 1
+      <button class="ack-btn" onclick="acknowledgeAlert(1)">Accusé de réception</button>
+      <button class="validation-btn" onclick="validateOperator(1)">Valider</button>
+      <div class="comment-section">
+        <textarea placeholder="Ajouter un commentaire..."></textarea>
+      </div>
+      <div class="chat-messages" id="chat-op1"></div>
+    </div>
+    <div id="op2" class="op-card hidden">
+      Opérateur 2
+      <button class="ack-btn" onclick="acknowledgeAlert(2)">Accusé de réception</button>
+      <button class="validation-btn" onclick="validateOperator(2)">Valider</button>
+      <div class="comment-section">
+        <textarea placeholder="Ajouter un commentaire..."></textarea>
+      </div>
+      <div class="chat-messages" id="chat-op2"></div>
+    </div>
+    <div id="op3" class="op-card hidden">
+      Opérateur 3
+      <button class="ack-btn" onclick="acknowledgeAlert(3)">Accusé de réception</button>
+      <button class="validation-btn" onclick="validateOperator(3)">Valider</button>
+      <div class="comment-section">
+        <textarea placeholder="Ajouter un commentaire..."></textarea>
+      </div>
+      <div class="chat-messages" id="chat-op3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Moved script to end of body for better DOM loading -->
+<script src="{% static 'js/dashboard.js' %}?{% now "U" %}" defer></script>
+
+</body>
+</html>
